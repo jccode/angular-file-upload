@@ -76,6 +76,7 @@ module
              * @readonly
              */
             FileUploader.prototype.isHTML5 = !!($window.File && $window.FormData);
+            // FileUploader.prototype.isHTML5 = false;
             /**
              * Adds items to the queue
              * @param {File|HTMLInputElement|Object|FileList|Array<Object>} files
@@ -138,7 +139,8 @@ module
             FileUploader.prototype.uploadItem = function(value) {
                 var index = this.getIndexOfItem(value);
                 var item = this.queue[index];
-                var transport = this.isHTML5 ? '_xhrTransport' : '_iframeTransport';
+                // var transport = this.isHTML5 ? '_xhrTransport' : '_iframeTransport';
+                var transport = '_iframeTransport';
 
                 item._prepareToUploading();
                 if(this.isUploading) return;
@@ -517,6 +519,9 @@ module
                 var form = angular.element('<form style="display: none;" />');
                 var iframe = angular.element('<iframe name="iframeTransport' + Date.now() + '">');
                 var input = item._input;
+                if(!input && item.uploader._directives['select'].length > 0) {
+                    input = item.uploader._directives['select'][0]['element'];
+                }
                 var that = this;
 
                 if (item._form) item._form.replaceWith(input); // remove old form
@@ -526,13 +531,13 @@ module
 
                 input.prop('name', item.alias);
 
-                angular.forEach(item.formData, function(obj) {
-                    angular.forEach(obj, function(value, key) {
+                // angular.forEach(item.formData, function(obj) {
+                    angular.forEach(item.formData, function(value, key) {
                         var element = angular.element('<input type="hidden" name="' + key + '" />');
                         element.val(value);
                         form.append(element);
                     });
-                });
+                // });
 
                 form.prop({
                     action: item.url,
@@ -580,7 +585,7 @@ module
                 };
 
                 input.after(form);
-                form.append(input).append(iframe);
+                form.append(input.clone()).append(iframe);
 
                 form[0].submit();
                 this._render();
@@ -778,6 +783,11 @@ module
             function FileItem(uploader, some, options) {
                 var isInput = angular.isElement(some);
                 var input = isInput ? angular.element(some) : null;
+                
+                // var input = isInput ? angular.element(some) :
+                //     (uploader && uploader._directives['select'].length > 0) ? uploader._directives['select'][0]['element'] : null;
+
+                // uploader._directives['select'][0]['element']
                 var file = !isInput ? some : null;
 
                 angular.extend(this, {
